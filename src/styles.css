@@ -1,0 +1,35 @@
+html,
+body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+#emp-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  flex-flow: column;
+}
+
+#grid {
+  margin-bottom: 16px;
+}
+
+input {
+  flex: 1;
+  margin-bottom: 8px;
+}
+
+.control-wrap {
+  position: absolute;
+  right: 0;
+  width: 160px;
+  flex: 1;
+  box-shadow: 0 0 5px #666;
+  padding: 16px;
+  border-radius: 8px 0 0 8px;
+  background-color: #fff;
+}
