@@ -10,37 +10,82 @@ const grid = gridContainer.getContext('2d')
 
 let cellSize = parseInt(cellSizeInput.value, 10)
 let gridSize = parseInt(gridSizeInput.value, 10)
+let isAccessibleCache
+let points
+let checkedCoords
 
-const sumDigits = (x, y) => `${x}${y}`.split('').reduce((acc, cur) => acc + parseInt(cur, 10), 0)
+const sumDigits = (x, y) => `${x}${y}`.split('').reduce((acc, cur) => acc + +cur, 0)
+const checkIsAccessible = (x, y) => {
+  const absX = Math.abs(x)
+  const absY = Math.abs(y)
+  const cacheKey = `${absX}${absY}`
+  const isAccessible =
+    isAccessibleCache[cacheKey] !== undefined ? isAccessibleCache[cacheKey] : sumDigits(absX, absY) <= digitSumLimit
+  isAccessibleCache[cacheKey] = isAccessible
+
+  return isAccessible
+}
 
 function setAccessible(accessiblePointCount) {
   accessiblePoints.innerText = `${accessiblePointCount}/${Math.pow(gridSize, 2)}`
   accessibleArea.innerText = `${accessiblePointCount * cellSize}/${Math.pow(gridSize * cellSize, 2)}`
 }
-function fillCell(x, y, fillColor) {
-  grid.fillStyle = fillColor
-  grid.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+
+function fillCell(x, y) {
+  const coordString = `${x},${y}`
+  if (checkedCoords.has(coordString) || x > gridSize || y > gridSize) {
+    return
+  }
+  const isAccessible = checkIsAccessible(x, y)
+
+  if (!isAccessible) {
+    grid.fillStyle = isAccessible ? 'green' : 'red'
+    grid.fillRect(x + (gridSize / 2) * cellSize, y + (gridSize / 2) * cellSize, cellSize, cellSize)
+  }
+  checkedCoords.add(coordString)
+
+  return isAccessible
 }
 
 function generateGrid(size) {
-  let accessiblePointCount = 0
-  const gridArray = [...Array(Math.round(size)).keys()]
+  checkedCoords = new Set()
+  isAccessibleCache = {}
+  points = []
+  const start = -(gridSize / 2)
+  const end = gridSize / 2
+  const gridArray = Array(end - start + 1)
+    .fill()
+    .map((_, i) => start + i)
+
   gridContainer.width = cellSize * size
   gridContainer.height = cellSize * size
 
   gridArray.forEach((x) => {
+    const col = []
     gridArray.forEach((y) => {
-      const isAccessible = sumDigits(x, y) <= digitSumLimit
-      accessiblePointCount += +isAccessible
-
-      const fillColor = isAccessible ? 'green' : 'red'
-      fillCell(x, y, fillColor)
+      col.push(fillCell(x, y))
     })
+    points.push(col)
   })
 
-  setAccessible(accessiblePointCount)
+  // countAccessible(end, end, points)
 
   return grid
+}
+
+const countAccessible = (x, y) => {
+  if (checkedCoords.x.has(x) || checkedCoords.y.has(y)) {
+    return
+  }
+
+  grid.fillStyle = 'green'
+  grid.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+
+  checkedCoords.x.add(x)
+  checkedCoords.y.add(y)
+
+  countAccessible(x + 1, y)
+  countAccessible(x, y + 1)
 }
 
 const updateCellSize = ({ target: { value } }) => {
@@ -48,9 +93,32 @@ const updateCellSize = ({ target: { value } }) => {
   generateGrid(gridSize)
 }
 
-const updateGridSize = ({ target: { value } }) => generateGrid(parseInt(value, 10))
+const updateGridSize = ({ target: { value } }) => {
+  gridSize = parseInt(value, 10)
+  generateGrid(gridSize)
+}
+
+generateGrid(gridSize)
+
+const getPixelPos = function (x, y) {
+  return (y * gridContainer.width + x) * 4
+}
+
+const checkAccessibleArea = ({ offsetX, offsetY }) => {
+  const dstImg = grid.getImageData(0, 0, gridContainer.width, gridContainer.height)
+  const dstData = dstImg.data
+  const startPos = getPixelPos(offsetX, offsetY)
+  const startColor = {
+    r: dstData[startPos],
+    g: dstData[startPos + 1],
+    b: dstData[startPos + 2],
+    a: dstData[startPos + 3],
+  }
+
+  console.log(startColor)
+}
 
 cellSizeInput.addEventListener('change', updateCellSize, false)
 gridSizeInput.addEventListener('change', updateGridSize, false)
 
-generateGrid(gridSize)
+gridContainer.addEventListener('click', checkAccessibleArea, false)

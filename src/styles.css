@@ -14,10 +14,6 @@ body {
   flex-flow: column;
 }
 
-#grid {
-  margin-bottom: 16px;
-}
-
 input {
   flex: 1;
   margin-bottom: 8px;
