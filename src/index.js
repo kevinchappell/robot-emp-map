@@ -13,6 +13,8 @@ let gridSize = parseInt(gridSizeInput.value, 10)
 let isAccessibleCache
 let points
 let checkedCoords
+let start
+let end
 
 const sumDigits = (x, y) => `${x}${y}`.split('').reduce((acc, cur) => acc + +cur, 0)
 const checkIsAccessible = (x, y) => {
@@ -51,8 +53,8 @@ function generateGrid(size) {
   checkedCoords = new Set()
   isAccessibleCache = {}
   points = []
-  const start = -(gridSize / 2)
-  const end = gridSize / 2
+  start = -(gridSize / 2)
+  end = gridSize / 2
   const gridArray = Array(end - start + 1)
     .fill()
     .map((_, i) => start + i)
@@ -68,24 +70,32 @@ function generateGrid(size) {
     points.push(col)
   })
 
-  // countAccessible(end, end, points)
+  checkedCoords = new Set()
+
+  // countAccessible(end, end)
 
   return grid
 }
 
 const countAccessible = (x, y) => {
-  if (checkedCoords.x.has(x) || checkedCoords.y.has(y)) {
+  const coordString = `${x},${y}`
+  if (checkedCoords.has(coordString)) {
     return
   }
+  if (x < 0 || y < 0 || x > points.length - 1 || y > points[x].length - 1) {
+    return
+  }
+  checkedCoords.add(checkedCoords)
 
   grid.fillStyle = 'green'
   grid.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
 
-  checkedCoords.x.add(x)
-  checkedCoords.y.add(y)
-
-  countAccessible(x + 1, y)
-  countAccessible(x, y + 1)
+  console.log(
+    countAccessible(x + 1, y),
+    countAccessible(x - 1, y),
+    countAccessible(x, y + 1),
+    countAccessible(x, y - 1)
+  )
 }
 
 const updateCellSize = ({ target: { value } }) => {
